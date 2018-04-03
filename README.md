@@ -20,17 +20,18 @@ First version of an archive auditing tool for BDRC, built with
 
 * ", ": use a comma followed by a space to separate filter keywords
 
-    archive, images 
+        archive, images 
+
 ...will match both **archive** and **images**
 
 * "*": * replaces any string of characters
 
-    arch
+        arch
 ... will match **arch**ive, **arch**itecture and **arch**ery
 
 * "?": ? stands for one or no character
 
-    image?
+        image?
 ... will match both **image** and **image**s
 
 
