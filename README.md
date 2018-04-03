@@ -18,21 +18,20 @@ First version of an archive auditing tool for BDRC, built with
 
 ## Filter with wildcards
 
-* ", ": use a comma followed by a space to separate filter keywords
+", ": use a **comma followed by a space** to separate filter keywords
 
-        archive, images 
-
+    archive, images 
 ...will match both **archive** and **images**
 
-* "*": * replaces any string of characters
+"*": **\*** stands for any character or string of characters
 
-        arch
+    arch*
 ... will match **arch**ive, **arch**itecture and **arch**ery
 
-* "?": ? stands for one or no character
+"?": **?** stands for one or no character
 
-        image?
-... will match both **image** and **image**s
+    image?
+...will match both **image** and **image**s
 
 
 
