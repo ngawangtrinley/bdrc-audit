@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import os
+import os, glob, sys
 from PyQt5.QtCore import (QDir, QDirIterator, QIODevice, QFile, QFileInfo, Qt, QTextStream,
                           QUrl)
 from PyQt5.QtGui import QDesktopServices, QFont, QColor
@@ -14,6 +14,15 @@ class Window(QDialog):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
 
+        if getattr(sys, 'frozen', False):
+            bundle_dir = os.path.abspath(sys.executable + "/../../../")
+        else:
+            bundle_dir = os.path.os.path.abspath(__file__)
+
+        self.workingDir = os.path.dirname(bundle_dir)
+        # print(self.workingDir)
+        # print(os.path.abspath(bundle_dir + "/../../"))
+
         # Initialize user settings
         self.recursivity = QDirIterator.Subdirectories
         self.recursivity_2 = QDirIterator.NoIteratorFlags
@@ -24,7 +33,7 @@ class Window(QDialog):
 
         # Row 0
         directoryLabel = QLabel("In folder:")
-        self.directoryComboBox = self.createComboBox(os.getcwd())
+        self.directoryComboBox = self.createComboBox(self.workingDir)
         browseButton = self.createButton("&Browse...", self.browse)
 
         # Row 1
@@ -90,7 +99,7 @@ class Window(QDialog):
 
         self.setLayout(mainLayout)
 
-        self.setWindowTitle("BDRC File Counter")
+        self.setWindowTitle("bdrc-audit 0.1")
         self.resize(520, 440)
         # self.resize(442, 440)
 
@@ -137,7 +146,7 @@ class Window(QDialog):
 
     def browse(self):
         directory = QFileDialog.getExistingDirectory(self, "Find files",
-                                                     os.getcwd())
+                                                     self.workingDir)
 
         if directory:
             if self.directoryComboBox.findText(directory) == -1:
@@ -153,15 +162,16 @@ class Window(QDialog):
 
     def find(self):
         self.filesTable.setRowCount(0)
-
         self.path = self.directoryComboBox.currentText()
         fileName = self.filterComboBox.currentText()
         files = []
-        text = self.textComboBox.currentText()
 
         if not fileName:
             fileName = "*"
         fileName = fileName.split(", ")
+
+        # not used, kept for full text search
+        text = self.textComboBox.currentText()
 
         self.updateComboBox(self.directoryComboBox)
         self.updateComboBox(self.filterComboBox)
@@ -217,18 +227,19 @@ class Window(QDialog):
 
     def showFiles(self, files):
         for fn in files:
-            file = QFile(self.currentDir.relativeFilePath(fn))
+            # file = QFile(self.currentDir.relativeFilePath(fn))
             # May change in countfile()
             self.pathToDisplay = fn
+            # print(QFileInfo(file).baseName)
 
-            if QFileInfo(file).isDir():
+            if os.path.isdir(fn):
                 size = self.countFiles(fn)
                 if self.dirView:
                     sizeItem = QTableWidgetItem("%d" % size)
                 else:
                     sizeItem = QTableWidgetItem("%d files" % size)
             else:
-                size = QFileInfo(file).size()
+                size = QFileInfo(fn).size()
                 sizeItem = QTableWidgetItem(
                     "%d KB" % (int((size + 1023) / 1024)))
 
@@ -254,7 +265,6 @@ class Window(QDialog):
         files = []
 
         if self.subfolderLevel > 0:
-            import glob
             try:
                 path = glob.glob('%s/%s' %
                                  (folder, '*/'*self.subfolderLevel))[0]
@@ -300,7 +310,7 @@ class Window(QDialog):
         import os
         import csv
         path = QFileDialog.getSaveFileName(
-            self, 'Save CSV', os.getcwd(), 'CSV(*.csv)')
+            self, 'Save CSV', self.workingDir, 'CSV(*.csv)')
         if path[0] != '':
             with open(path[0], 'w') as csv_file:
                 writer = csv.writer(csv_file, dialect='excel')
