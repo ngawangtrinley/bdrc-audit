@@ -17,15 +17,17 @@ First version of an archive auditing tool for BDRC, built with
 3. change the folder level to see the content of child folders
 
 ## Filter with wildcards
-", ": use a comma followed by a space to separate filter keywords
 
-    **archive, images** will match both *archive* and *images*
-"*": * replaces any string of characters
+    ", ": use a comma followed by a space to separate filter keywords
+**archive, images** will match both **archive** and **images**
 
-    **arch*** will match *archive*, *architecture* and *archery*
-"?": ? stands for one or no character
+    "*": * replaces any string of characters
 
-    **image?** will match both **image** and **images**
+**arch*** will match **arch**ive, **arch**itecture and **arch**ery
+
+    "?": ? stands for one or no character
+
+**image?** will match both **image** and **image**s
 
 
 
