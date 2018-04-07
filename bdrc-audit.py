@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import os, glob, sys
+import os
+import glob
+import sys
 from PyQt5.QtCore import (QDir, QDirIterator, QIODevice, QFile, QFileInfo, Qt, QTextStream,
                           QUrl)
 from PyQt5.QtGui import QDesktopServices, QFont, QColor
@@ -8,6 +10,8 @@ from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QComboBox,
                              QDialog, QFileDialog, QGridLayout, QHBoxLayout, QHeaderView, QLabel,
                              QProgressDialog, QPushButton, QSizePolicy, QTableWidget, QCheckBox,
                              QTableWidgetItem, QSpinBox, QMessageBox)
+
+from ext import count
 
 
 class Window(QDialog):
@@ -24,8 +28,8 @@ class Window(QDialog):
         # print(os.path.abspath(bundle_dir + "/../../"))
 
         # Initialize user settings
-        self.recursivity = QDirIterator.Subdirectories
-        self.recursivity_2 = QDirIterator.NoIteratorFlags
+        self.searchRecursivity = QDirIterator.Subdirectories
+        self.countRecursivity = QDirIterator.NoIteratorFlags
         self.dirFilters = (QDir.Dirs | QDir.NoDotAndDotDot)
         # to swap size and count in file view
         self.dirView = True
@@ -47,16 +51,16 @@ class Window(QDialog):
         self.typeComboBox.currentIndexChanged.connect(self.changeType)
         self.checkBox = QCheckBox("Subfolders")
         self.checkBox.toggle()
-        self.checkBox.stateChanged.connect(self.changeRecursivity)
+        self.checkBox.stateChanged.connect(self.changeSearchRecursivity)
         self.findButton = self.createButton("&Find", self.find)
 
         # Row 2
 
-        self.depthLabel = QLabel("Count files in subfolder number:")
+        self.depthLabel = QLabel("Count files in subfolder level")
         self.folderDepthSpinBox = QSpinBox()
         self.folderDepthSpinBox.valueChanged.connect(self.changeFolderDepth)
-        self.checkBox_2 = QCheckBox("Files in all subfolders")
-        self.checkBox_2.stateChanged.connect(self.changeRecursivity_2)
+        self.checkBox_2 = QCheckBox("Count all files")
+        self.checkBox_2.stateChanged.connect(self.changeCountRecursivity)
 
         # Row 3 Table
         self.createFilesTable()
@@ -103,11 +107,11 @@ class Window(QDialog):
         self.resize(520, 440)
         # self.resize(442, 440)
 
-    def changeRecursivity_2(self, state):
+    def changeCountRecursivity(self, state):
         if state == Qt.Checked:
-            self.recursivity_2 = QDirIterator.Subdirectories
+            self.countRecursivity = QDirIterator.Subdirectories
         else:
-            self.recursivity_2 = QDirIterator.NoIteratorFlags
+            self.countRecursivity = QDirIterator.NoIteratorFlags
 
     def changeFolderDepth(self, value):
         self.subfolderLevel = value
@@ -138,11 +142,11 @@ class Window(QDialog):
             self.depthLabel.hide()
             self.folderDepthSpinBox.hide()
 
-    def changeRecursivity(self, state):
+    def changeSearchRecursivity(self, state):
         if state == Qt.Checked:
-            self.recursivity = QDirIterator.Subdirectories
+            self.searchRecursivity = QDirIterator.Subdirectories
         else:
-            self.recursivity = QDirIterator.NoIteratorFlags
+            self.searchRecursivity = QDirIterator.NoIteratorFlags
 
     def browse(self):
         directory = QFileDialog.getExistingDirectory(self, "Find files",
@@ -180,7 +184,7 @@ class Window(QDialog):
         self.currentDir = QDir(self.path)
 
         self.it = QDirIterator(self.path, fileName,
-                               self.dirFilters, self.recursivity)
+                               self.dirFilters, self.searchRecursivity)
         while self.it.hasNext():
             files.append(self.it.next())
 
@@ -233,7 +237,7 @@ class Window(QDialog):
             # print(QFileInfo(file).baseName)
 
             if os.path.isdir(fn):
-                size = self.countFiles(fn)
+                size = count.countFiles(self, fn)
                 if self.dirView:
                     sizeItem = QTableWidgetItem("%d" % size)
                 else:
@@ -243,8 +247,12 @@ class Window(QDialog):
                 sizeItem = QTableWidgetItem(
                     "%d KB" % (int((size + 1023) / 1024)))
 
+            head = '.'
+            if self.path.endswith('/'):
+                head = './'
+
             fileNameItem = QTableWidgetItem(
-                self.pathToDisplay.replace(self.path, '.'))
+                self.pathToDisplay.replace(self.path, head))
             fileNameItem.setFlags(fileNameItem.flags() ^ Qt.ItemIsEditable)
 
             sizeItem.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
@@ -260,27 +268,6 @@ class Window(QDialog):
 
         self.filesFoundLabel.setText(
             "%d matches. Double click to open." % len(files))
-
-    def countFiles(self, folder):
-        files = []
-
-        if self.subfolderLevel > 0:
-            try:
-                path = glob.glob('%s/%s' %
-                                 (folder, '*/'*self.subfolderLevel))[0]
-                self.pathToDisplay = path
-            except:
-                return 0
-        else:
-            path = folder
-
-        it = QDirIterator(
-            path, (QDir.Files | QDir.NoSymLinks), self.recursivity_2)
-        while it.hasNext():
-            files.append(it.next())
-
-        count = len(files)
-        return count
 
     def createButton(self, text, member):
         button = QPushButton(text)
@@ -303,6 +290,9 @@ class Window(QDialog):
         self.filesTable.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
         self.filesTable.verticalHeader().hide()
         self.filesTable.setShowGrid(False)
+
+        self.filesTable.setSortingEnabled(True)
+        self.filesTable.sortByColumn(0, Qt.AscendingOrder)
 
         self.filesTable.cellActivated.connect(self.openFileOfItem)
 
@@ -331,7 +321,11 @@ class Window(QDialog):
         item = self.filesTable.item(row, 0)
 
         # Complete links to make them click
-        path = self.path + item.text()[1:]
+        tail = item.text()[1:]
+        if self.path.endswith('/'):
+            tail = item.text()[2:]
+        path = self.path + tail
+        print(path)
         QDesktopServices.openUrl(QUrl.fromLocalFile(
             self.currentDir.absoluteFilePath(path)))
 
