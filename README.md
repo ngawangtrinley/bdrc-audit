@@ -44,3 +44,14 @@ First version of an archive auditing tool for BDRC
 * audit image metadata
 * generate archive and web bundles
 * sync images to the server when ready
+
+### Building from source
+
+To build the project from source, get [PyInstaller](http://pyinstaller.readthedocs.io/en/stable/installation.html) on your machine and use the following command:
+
+    pyinstaller -w -F bdrc-audit.py --icon=rc/icon-windowed.icns
+
+In order to support **retina** display on Mac, locate the *Info.plist* directory in the *bdrc-audit.app* bundle and add the following string/key pair at the end of the list:
+
+    <string>NSHighResolutionCapable</string>
+    <key>True</key>
