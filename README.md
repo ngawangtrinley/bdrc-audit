@@ -2,7 +2,7 @@
 First version of an archive auditing tool for BDRC
 
 ## Get the standalone desktop app
-* Mac - [bdrc-audit01](https://github.com/ngawangtrinley/bdrc-audit/releases/download/v01/bdrc-audit.zip) (zip)
+* Mac - [bdrc-audit01](https://github.com/ngawangtrinley/bdrc-audit/releases/download/v01.1/bdrc-audit.zip) (zip file)
 * Windows - coming soon
 * Linux - coming soon
 
