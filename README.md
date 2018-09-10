@@ -41,11 +41,13 @@ First version of an archive auditing tool for BDRC
 * order files by name/size
 * audit number of files per folder
 * audit folder/file names
+* check that the image number matches the number in the biblio-sheet 
 * audit biblio-sheets
 * Pillow integration
 * audit image metadata
 * generate archive and web bundles
 * sync images to the server when ready
+
 
 ### Building from source
 
